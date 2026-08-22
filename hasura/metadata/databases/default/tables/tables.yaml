@@ -1,0 +1,159 @@
+- table:
+    name: clinics
+    schema: public
+  array_relationships:
+    - name: locations
+      using:
+        foreign_key_constraint_on:
+          column: clinic_id
+          table:
+            name: locations
+            schema: public
+    - name: doctors
+      using:
+        foreign_key_constraint_on:
+          column: clinic_id
+          table:
+            name: doctors
+            schema: public
+    - name: services
+      using:
+        foreign_key_constraint_on:
+          column: clinic_id
+          table:
+            name: services
+            schema: public
+- table:
+    name: locations
+    schema: public
+  object_relationships:
+    - name: clinic
+      using:
+        foreign_key_constraint_on: clinic_id
+- table:
+    name: users
+    schema: public
+  object_relationships:
+    - name: clinic
+      using:
+        foreign_key_constraint_on: clinic_id
+- table:
+    name: doctors
+    schema: public
+  object_relationships:
+    - name: clinic
+      using:
+        foreign_key_constraint_on: clinic_id
+    - name: location
+      using:
+        foreign_key_constraint_on: location_id
+  array_relationships:
+    - name: doctor_services
+      using:
+        foreign_key_constraint_on:
+          column: doctor_id
+          table:
+            name: doctor_services
+            schema: public
+    - name: working_hours
+      using:
+        foreign_key_constraint_on:
+          column: doctor_id
+          table:
+            name: working_hours
+            schema: public
+- table:
+    name: services
+    schema: public
+  object_relationships:
+    - name: clinic
+      using:
+        foreign_key_constraint_on: clinic_id
+  array_relationships:
+    - name: doctor_services
+      using:
+        foreign_key_constraint_on:
+          column: service_id
+          table:
+            name: doctor_services
+            schema: public
+- table:
+    name: doctor_services
+    schema: public
+  object_relationships:
+    - name: doctor
+      using:
+        foreign_key_constraint_on: doctor_id
+    - name: service
+      using:
+        foreign_key_constraint_on: service_id
+- table:
+    name: working_hours
+    schema: public
+  object_relationships:
+    - name: doctor
+      using:
+        foreign_key_constraint_on: doctor_id
+    - name: clinic
+      using:
+        foreign_key_constraint_on: clinic_id
+- table:
+    name: holidays
+    schema: public
+- table:
+    name: patients
+    schema: public
+  array_relationships:
+    - name: appointments
+      using:
+        foreign_key_constraint_on:
+          column: patient_id
+          table:
+            name: appointments
+            schema: public
+- table:
+    name: leads
+    schema: public
+- table:
+    name: appointments
+    schema: public
+  object_relationships:
+    - name: patient
+      using:
+        foreign_key_constraint_on: patient_id
+    - name: doctor
+      using:
+        foreign_key_constraint_on: doctor_id
+    - name: service
+      using:
+        foreign_key_constraint_on: service_id
+    - name: location
+      using:
+        foreign_key_constraint_on: location_id
+    - name: clinic
+      using:
+        foreign_key_constraint_on: clinic_id
+  event_triggers:
+    - name: appointment_created
+      definition:
+        enable_manual: false
+        insert:
+          columns: "*"
+      retry_conf:
+        num_retries: 3
+        interval_sec: 10
+        timeout_sec: 60
+      webhook_from_env: APPOINTMENT_CREATED_WEBHOOK
+      headers:
+        - name: x-hasura-event-secret
+          value_from_env: HASURA_EVENT_SECRET
+- table:
+    name: clinic_notifications
+    schema: public
+  object_relationships:
+    - name: appointment
+      using:
+        foreign_key_constraint_on: appointment_id
+    - name: clinic
+      using:
+        foreign_key_constraint_on: clinic_id

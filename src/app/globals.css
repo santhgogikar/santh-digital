@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f3efe6;
+  --ink: #1c2a24;
+  --ink-soft: #3d4f47;
+  --line: #d7cfc0;
+  --teal: #0f5f56;
+  --teal-deep: #0a3f3a;
+  --clay: #c24d2c;
+  --clay-hover: #a63d21;
+  --gold: #b0894b;
+  --white: #fffcf7;
+  --ok: #1f7a4d;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-teal: var(--teal);
+  --color-teal-deep: var(--teal-deep);
+  --color-clay: var(--clay);
+  --color-gold: var(--gold);
+  --font-sans: var(--font-outfit);
+  --font-serif: var(--font-fraunces);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-outfit), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+.serif {
+  font-family: var(--font-fraunces), Georgia, serif;
+  letter-spacing: -0.03em;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: #cde4df;
+}
+
+.btn-clay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--clay);
+  color: white;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.85rem 1.4rem;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.btn-clay:hover {
+  background: var(--clay-hover);
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  padding: 0.85rem 1.4rem;
+  font-weight: 600;
+}
+
+.panel {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+}
