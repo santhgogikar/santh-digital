@@ -34,6 +34,7 @@ npm run test:e2e    # against a running app on :3000
 | Surface | URL |
 | --- | --- |
 | Platform | http://localhost:3000 |
+| Brand kit | http://localhost:3000/brand |
 | Demo clinic | http://localhost:3000/c/smile-care-mehdipatnam |
 | Booking | http://localhost:3000/c/smile-care-mehdipatnam/book |
 | Clinic login | http://localhost:3000/login |
@@ -44,6 +45,8 @@ Demo clinic login: `admin@smilecare.demo` / `clinic123`
 Hasura admin secret: `devadminsecret`
 
 Postgres is published on **5433** (not 5432) so it does not collide with a local Postgres install.
+
+Full technical documentation: **[docs/TECHNICAL.md](./docs/TECHNICAL.md)**. Brand kit: **[docs/BRAND.md](./docs/BRAND.md)**. Product thesis: **[PRODUCT.md](./PRODUCT.md)**.
 
 ## Architecture
 

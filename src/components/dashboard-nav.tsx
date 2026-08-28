@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { NotificationBell } from "@/components/notification-bell";
+import { BrandMark } from "@/components/brand-mark";
 import { usePathname, useRouter } from "next/navigation";
 
 const links = [
@@ -33,7 +34,10 @@ export function DashboardNav({ clinicName }: { clinicName: string }) {
       <header className="sticky top-0 z-30 border-b border-line bg-white lg:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-teal">Santh Digital</p>
+            <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-teal">
+              <BrandMark size={18} className="rounded-sm" />
+              Santh Digital
+            </p>
             <p className="truncate font-semibold">{clinicName}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -64,7 +68,10 @@ export function DashboardNav({ clinicName }: { clinicName: string }) {
       <aside className="hidden border-r border-line bg-white lg:flex lg:min-h-screen lg:w-60 lg:flex-col">
         <div className="flex items-start justify-between gap-2 px-5 py-5">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.16em] text-teal">Santh Digital</p>
+            <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-teal">
+              <BrandMark size={20} className="rounded-sm" />
+              Santh Digital
+            </p>
             <p className="mt-1 font-semibold">{clinicName}</p>
           </div>
           <NotificationBell />

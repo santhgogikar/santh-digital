@@ -8,6 +8,10 @@ const CLINIC_FIELDS = `
   tagline
   phone
   email
+  logo_url
+  brand_primary
+  brand_deep
+  brand_paper
   timezone
   booking_mode
   booking_buffer_minutes

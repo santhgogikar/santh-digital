@@ -1,17 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #f3efe6;
-  --ink: #1c2a24;
-  --ink-soft: #3d4f47;
-  --line: #d7cfc0;
-  --teal: #0f5f56;
-  --teal-deep: #0a3f3a;
-  --clay: #c24d2c;
-  --clay-hover: #a63d21;
-  --gold: #b0894b;
-  --white: #fffcf7;
+  /* Santh Digital defaults. Clinics inherit these unless they set brand_* hex columns. */
+  --brand: #ff4f00;
+  --brand-hover: #e04600;
+  --brand-deep: #000000;
+  --paper: #f4f4f4;
+  --ink: #0a0a0a;
+  --ink-soft: #4a4a4a;
+  --line: #e4e4e4;
+  --white: #ffffff;
   --ok: #1f7a4d;
+  --teal: var(--brand);
+  --teal-deep: var(--brand-deep);
+  --clay: var(--brand);
+  --clay-hover: var(--brand-hover);
+  --gold: var(--brand);
 }
 
 @theme inline {
@@ -23,8 +27,9 @@
   --color-teal-deep: var(--teal-deep);
   --color-clay: var(--clay);
   --color-gold: var(--gold);
+  --color-white: var(--white);
   --font-sans: var(--font-outfit);
-  --font-serif: var(--font-fraunces);
+  --font-serif: var(--font-outfit);
 }
 
 * {
@@ -45,8 +50,9 @@ h1,
 h2,
 h3,
 .serif {
-  font-family: var(--font-fraunces), Georgia, serif;
-  letter-spacing: -0.03em;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.04em;
 }
 
 a {
@@ -54,7 +60,7 @@ a {
 }
 
 ::selection {
-  background: #cde4df;
+  background: color-mix(in srgb, var(--brand) 28%, white);
 }
 
 .btn-clay {

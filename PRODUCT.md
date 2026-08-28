@@ -24,3 +24,7 @@ Explicitly out of MVP: mobile app, EMR, payments, WhatsApp/SMS, website builder,
 ## Local run
 
 See [README.md](./README.md).
+
+## Technical documentation
+
+Architecture, authentication, authorization, APIs, design system, and user journeys: [docs/TECHNICAL.md](./docs/TECHNICAL.md). Brand kit (logo, colour, type, voice): [docs/BRAND.md](./docs/BRAND.md).

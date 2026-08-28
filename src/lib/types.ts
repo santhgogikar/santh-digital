@@ -46,6 +46,10 @@ export type ClinicRecord = {
   google_rating: number | null;
   google_review_count: number | null;
   about: string | null;
+  logo_url: string | null;
+  brand_primary: string | null;
+  brand_deep: string | null;
+  brand_paper: string | null;
   locations: ClinicLocation[];
   doctors: ClinicDoctor[];
   services: ClinicService[];

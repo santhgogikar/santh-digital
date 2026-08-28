@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getClinicById } from "@/lib/clinic";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { DashboardLive } from "@/components/dashboard-live";
+import { ThemeScope } from "@/components/theme-scope";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -24,11 +25,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!clinic) redirect("/login");
 
   return (
-    <div className="min-h-screen lg:flex">
-      <DashboardNav clinicName={clinic.name} />
-      <DashboardLive>
-        <div className="flex-1 px-4 py-6 lg:px-10 lg:py-8">{children}</div>
-      </DashboardLive>
-    </div>
+    <ThemeScope theme={clinic}>
+      <div className="min-h-screen lg:flex">
+        <DashboardNav clinicName={clinic.name} />
+        <DashboardLive>
+          <div className="flex-1 px-4 py-6 lg:px-10 lg:py-8">{children}</div>
+        </DashboardLive>
+      </div>
+    </ThemeScope>
   );
 }

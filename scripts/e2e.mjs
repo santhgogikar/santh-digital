@@ -38,6 +38,25 @@ async function main() {
   if (home.status !== 200 || !home.text.includes("Turn local searches")) {
     throw new Error(`Platform home failed: ${home.status}`);
   }
+  if (!home.text.includes("/brand/wordmark.png")) {
+    throw new Error("Platform home is missing the wordmark.");
+  }
+
+  const brandPage = await html("/brand");
+  if (brandPage.status !== 200 || !brandPage.text.includes("Design system") || !brandPage.text.includes("favicon.png")) {
+    throw new Error(`Brand page failed: ${brandPage.status}`);
+  }
+
+  for (const asset of ["/brand/favicon.png", "/brand/wordmark.png", "/brand/lockup.png", "/brand/mark.png"]) {
+    const response = await fetch(`${base}${asset}`);
+    if (response.status !== 200) {
+      throw new Error(`${asset} returned ${response.status}`);
+    }
+    const type = response.headers.get("content-type") ?? "";
+    if (!type.includes("png") && !type.includes("octet-stream")) {
+      throw new Error(`${asset} unexpected type ${type}`);
+    }
+  }
 
   const clinic = await html(`/c/${slug}`);
   if (clinic.status !== 200 || !clinic.text.includes("Smile Care Dental")) {
@@ -155,6 +174,9 @@ async function main() {
   if (overview.status !== 200 || typeof overview.body.metrics?.leads !== "number") {
     throw new Error(`Overview failed: ${JSON.stringify(overview.body)}`);
   }
+  if (!overview.body.needsConfirmation?.some((row) => row.booking_reference === booked.body.appointment.booking_reference)) {
+    throw new Error(`Inbox missed future/pending booking: ${JSON.stringify(overview.body.inbox)}`);
+  }
 
   const ranged = await json(`/api/dashboard/overview?from=${date}&to=${date}`, {
     headers: { cookie },
@@ -189,8 +211,28 @@ async function main() {
     throw new Error(`Authed dashboard status ${authedDash.status}`);
   }
   const dashHtml = await authedDash.text();
-  if (!dashHtml.includes("Dashboard") || !dashHtml.includes("Metrics")) {
-    throw new Error("Dashboard HTML missing Dashboard/Metrics");
+  if (!dashHtml.includes("Needs confirmation") || !dashHtml.includes("Day sheet and report")) {
+    throw new Error("Dashboard HTML missing inbox / day sheet");
+  }
+  if (!dashHtml.includes(booked.body.appointment.booking_reference)) {
+    throw new Error("Dashboard HTML missing the new booking reference in the inbox");
+  }
+
+  for (const view of ["pending", "today", "upcoming", "past"]) {
+    const page = await fetch(`${base}/dashboard/appointments?view=${view}`, {
+      headers: { cookie },
+      redirect: "manual",
+    });
+    if (page.status !== 200) {
+      throw new Error(`Bookings view=${view} status ${page.status}`);
+    }
+    const html = await page.text();
+    if (view === "pending" && !html.includes(booked.body.appointment.booking_reference)) {
+      throw new Error("Bookings pending view missing the new booking reference");
+    }
+    if (view === "upcoming" && !html.includes(booked.body.appointment.booking_reference)) {
+      throw new Error("Bookings upcoming view missing the new booking reference");
+    }
   }
 
   console.log("E2E passed");

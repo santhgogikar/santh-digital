@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Santh Digital">
+  <rect width="64" height="64" rx="18" fill="#FFFCF7" stroke="#D7CFC0" stroke-width="2"/>
+  <rect x="12" y="14" width="16" height="10" rx="5" fill="none" stroke="#0F5F56" stroke-width="2"/>
+  <rect x="36" y="14" width="16" height="10" rx="5" fill="#B0894B"/>
+  <rect x="12" y="32" width="16" height="10" rx="5" fill="none" stroke="#0F5F56" stroke-width="2"/>
+  <rect x="36" y="32" width="16" height="10" rx="5" fill="none" stroke="#0F5F56" stroke-width="2"/>
+  <circle cx="44" cy="51" r="3.5" fill="#C24D2C"/>
+</svg>

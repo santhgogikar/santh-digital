@@ -30,7 +30,7 @@ export function clinicAppointmentEmail(notice: AppointmentNotice) {
     "",
     "Open the dashboard to call, WhatsApp, or confirm.",
   ].join("\n");
-  const html = `<div style="font-family:Georgia,serif;color:#1c2a24"><p>A patient booked through the clinic website.</p><p><strong>${notice.patient.name}</strong> · ${notice.patient.mobile}<br/>${notice.service.name} with ${notice.doctor.name}<br/>${when}<br/>Ref ${notice.booking_reference}</p><p>Open the dashboard to call, WhatsApp, or confirm the slot.</p></div>`;
+  const html = `<div style="font-family:system-ui,sans-serif;color:#0A0A0A"><p>A patient booked through the clinic website.</p><p><strong>${notice.patient.name}</strong> · ${notice.patient.mobile}<br/>${notice.service.name} with ${notice.doctor.name}<br/>${when}<br/>Ref ${notice.booking_reference}</p><p>Open the dashboard to call, WhatsApp, or confirm the slot.</p></div>`;
   return {
     subject,
     text,

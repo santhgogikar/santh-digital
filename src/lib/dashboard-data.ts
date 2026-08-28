@@ -1,5 +1,15 @@
 import { hasura } from "./hasura";
-import { rangeBounds } from "./date-range";
+import { rangeBounds, todayYmd, type AppointmentView } from "./date-range";
+
+const APPOINTMENT_FIELDS = `
+  id
+  booking_reference
+  status
+  starts_at
+  doctor { name }
+  service { name }
+  patient { name mobile }
+`;
 
 export type DashboardAppointment = {
   id: string;
@@ -30,8 +40,27 @@ export type DashboardMetrics = {
   leads: number;
 };
 
+export function daySheetRows(rows: DashboardAppointment[]) {
+  return rows.filter((row) => row.status !== "pending");
+}
+
+export const appointmentViewFilters: Record<AppointmentView, string> = {
+  pending: `clinic_id: { _eq: $clinicId }, status: { _eq: pending }, starts_at: { _gte: $todayStart }`,
+  today: `clinic_id: { _eq: $clinicId }, starts_at: { _gte: $todayStart, _lt: $tomorrowStart }, status: { _nin: [cancelled] }`,
+  upcoming: `clinic_id: { _eq: $clinicId }, starts_at: { _gte: $todayStart }, status: { _in: [pending, confirmed] }`,
+  past: `clinic_id: { _eq: $clinicId }, starts_at: { _lt: $todayStart }`,
+};
+
+export const appointmentViewOrder: Record<AppointmentView, string> = {
+  pending: "{ starts_at: asc }",
+  today: "{ starts_at: asc }",
+  upcoming: "{ starts_at: asc }",
+  past: "{ starts_at: desc }",
+};
+
 export async function getDashboardRange(clinicId: string, from: string, to: string) {
   const bounds = rangeBounds(from, to);
+  const todayStart = rangeBounds(todayYmd(), todayYmd()).start;
   const data = await hasura<{
     appointments: { aggregate: { count: number } };
     pending: { aggregate: { count: number } };
@@ -42,8 +71,12 @@ export async function getDashboardRange(clinicId: string, from: string, to: stri
     leads: { aggregate: { count: number } };
     appointment_rows: DashboardAppointment[];
     lead_rows: DashboardLead[];
+    pending_upcoming: DashboardAppointment[];
+    pending_upcoming_count: { aggregate: { count: number } };
+    overdue_pending: DashboardAppointment[];
+    overdue_pending_count: { aggregate: { count: number } };
   }>(
-    `query RangeDash($clinicId: uuid!, $start: timestamptz!, $end: timestamptz!) {
+    `query RangeDash($clinicId: uuid!, $start: timestamptz!, $end: timestamptz!, $todayStart: timestamptz!) {
       appointments: appointments_aggregate(
         where: {
           clinic_id: { _eq: $clinicId }
@@ -99,14 +132,44 @@ export async function getDashboardRange(clinicId: string, from: string, to: stri
         order_by: { starts_at: asc }
         limit: 80
       ) {
-        id
-        booking_reference
-        status
-        starts_at
-        doctor { name }
-        service { name }
-        patient { name mobile }
+        ${APPOINTMENT_FIELDS}
       }
+      pending_upcoming: appointments(
+        where: {
+          clinic_id: { _eq: $clinicId }
+          status: { _eq: pending }
+          starts_at: { _gte: $todayStart }
+        }
+        order_by: { starts_at: asc }
+        limit: 80
+      ) {
+        ${APPOINTMENT_FIELDS}
+      }
+      pending_upcoming_count: appointments_aggregate(
+        where: {
+          clinic_id: { _eq: $clinicId }
+          status: { _eq: pending }
+          starts_at: { _gte: $todayStart }
+        }
+      ) { aggregate { count } }
+      overdue_pending: appointments(
+        where: {
+          clinic_id: { _eq: $clinicId }
+          status: { _eq: pending }
+          starts_at: { _lt: $todayStart }
+        }
+        order_by: { starts_at: desc }
+        limit: 40
+      ) {
+        ${APPOINTMENT_FIELDS}
+      }
+      overdue_pending_count: appointments_aggregate(
+        where: {
+          clinic_id: { _eq: $clinicId }
+          status: { _eq: pending }
+          starts_at: { _lt: $todayStart }
+        }
+      ) { aggregate { count } }
       lead_rows: leads(
         where: {
           clinic_id: { _eq: $clinicId }
@@ -123,7 +186,7 @@ export async function getDashboardRange(clinicId: string, from: string, to: stri
         created_at
       }
     }`,
-    { clinicId, start: bounds.start, end: bounds.endExclusive },
+    { clinicId, start: bounds.start, end: bounds.endExclusive, todayStart },
   );
 
   const metrics: DashboardMetrics = {
@@ -139,7 +202,32 @@ export async function getDashboardRange(clinicId: string, from: string, to: stri
   return {
     range: { from: bounds.from, to: bounds.to, start: bounds.start, endExclusive: bounds.endExclusive },
     metrics,
+    inbox: {
+      pendingUpcoming: data.pending_upcoming_count.aggregate.count,
+      overduePending: data.overdue_pending_count.aggregate.count,
+    },
+    needsConfirmation: data.pending_upcoming,
+    overduePending: data.overdue_pending,
     appointments: data.appointment_rows,
+    daySheet: daySheetRows(data.appointment_rows),
     leads: data.lead_rows,
   };
+}
+
+export async function listAppointmentsForView(clinicId: string, view: AppointmentView) {
+  const todayStart = rangeBounds(todayYmd(), todayYmd()).start;
+  const tomorrowStart = rangeBounds(todayYmd(), todayYmd()).endExclusive;
+  const variables: Record<string, string> = { clinicId, todayStart };
+  if (view === "today") variables.tomorrowStart = tomorrowStart;
+
+  const data = await hasura<{ appointments: DashboardAppointment[] }>(
+    `query Bookings($clinicId: uuid!, $todayStart: timestamptz!${view === "today" ? ", $tomorrowStart: timestamptz!" : ""}) {
+      appointments(where: { ${appointmentViewFilters[view]} }, order_by: ${appointmentViewOrder[view]}, limit: 80) {
+        ${APPOINTMENT_FIELDS}
+      }
+    }`,
+    variables,
+  );
+
+  return data.appointments;
 }

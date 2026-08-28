@@ -59,8 +59,20 @@ export function rangePresets(now = new Date()) {
   const today = todayYmd(now);
   return [
     { id: "today", label: "Today", from: today, to: today },
+    { id: "next7", label: "Next 7 days", from: today, to: addDaysYmd(today, 6) },
+    { id: "next14", label: "Next 14 days", from: today, to: addDaysYmd(today, 13) },
     { id: "yesterday", label: "Yesterday", from: addDaysYmd(today, -1), to: addDaysYmd(today, -1) },
     { id: "7d", label: "Last 7 days", from: addDaysYmd(today, -6), to: today },
     { id: "30d", label: "Last 30 days", from: addDaysYmd(today, -29), to: today },
   ] as const;
+}
+
+export const appointmentViews = ["pending", "today", "upcoming", "past"] as const;
+export type AppointmentView = (typeof appointmentViews)[number];
+
+export function parseAppointmentView(value?: string | null): AppointmentView {
+  if (value && appointmentViews.includes(value as AppointmentView)) {
+    return value as AppointmentView;
+  }
+  return "pending";
 }

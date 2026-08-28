@@ -1,21 +1,29 @@
 import Link from "next/link";
+import { BrandWordmark } from "@/components/brand-mark";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <p className="text-sm font-semibold tracking-[0.18em] uppercase text-teal">Santh Digital</p>
-        <nav className="flex items-center gap-5 text-sm">
-          <Link href="/c/smile-care-mehdipatnam" className="hidden sm:inline text-ink-soft hover:text-ink">
-            Demo clinic
+      <header className="bg-teal-deep">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <Link href="/" className="shrink-0">
+            <BrandWordmark className="h-16 w-auto sm:h-20" />
           </Link>
-          <Link href="/login" className="text-ink-soft hover:text-ink">
-            Clinic login
-          </Link>
-          <Link href="/c/smile-care-mehdipatnam/book" className="btn-clay !px-4 !py-2 text-sm">
-            See booking
-          </Link>
-        </nav>
+          <nav className="flex items-center gap-5 text-sm text-white">
+            <Link href="/brand" className="hidden sm:inline text-white/70 hover:text-white">
+              Brand
+            </Link>
+            <Link href="/c/smile-care-mehdipatnam" className="hidden sm:inline text-white/70 hover:text-white">
+              Demo clinic
+            </Link>
+            <Link href="/login" className="text-white/70 hover:text-white">
+              Clinic login
+            </Link>
+            <Link href="/c/smile-care-mehdipatnam/book" className="btn-clay !px-4 !py-2 text-sm">
+              See booking
+            </Link>
+          </nav>
+        </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-6 pb-24">

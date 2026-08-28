@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { BrandWordmark } from "@/components/brand-mark";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,8 +36,8 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-md">
-        <Link href="/" className="text-xs uppercase tracking-[0.18em] text-teal">
-          Santh Digital
+        <Link href="/">
+          <BrandWordmark className="h-14 w-auto sm:h-16" />
         </Link>
         <h1 className="mt-4 text-4xl">Clinic login</h1>
         <p className="mt-2 text-sm text-ink-soft">For reception and clinic administrators.</p>

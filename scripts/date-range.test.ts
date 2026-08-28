@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { addDaysYmd, isYmd, parseDashboardRange, rangeBounds, todayYmd } from "../src/lib/date-range";
+import {
+  addDaysYmd,
+  isYmd,
+  parseAppointmentView,
+  parseDashboardRange,
+  rangeBounds,
+  rangePresets,
+  todayYmd,
+} from "../src/lib/date-range";
 
 test("accepts valid calendar dates only", () => {
   assert.equal(isYmd("2026-08-21"), true);
@@ -34,4 +42,19 @@ test("range bounds are inclusive of the end date in IST", () => {
   const bounds = rangeBounds("2026-08-21", "2026-08-22");
   assert.equal(bounds.start, "2026-08-21T00:00:00+05:30");
   assert.equal(bounds.endExclusive, "2026-08-23T00:00:00+05:30");
+});
+
+test("presets include forward windows for the day sheet", () => {
+  const now = new Date("2026-08-21T10:00:00+05:30");
+  const presets = rangePresets(now);
+  const next7 = presets.find((p) => p.id === "next7");
+  const next14 = presets.find((p) => p.id === "next14");
+  assert.deepEqual(next7, { id: "next7", label: "Next 7 days", from: "2026-08-21", to: "2026-08-27" });
+  assert.deepEqual(next14, { id: "next14", label: "Next 14 days", from: "2026-08-21", to: "2026-09-03" });
+});
+
+test("bookings view defaults to the confirmation inbox", () => {
+  assert.equal(parseAppointmentView(undefined), "pending");
+  assert.equal(parseAppointmentView("upcoming"), "upcoming");
+  assert.equal(parseAppointmentView("nope"), "pending");
 });

@@ -6,9 +6,17 @@ export function ClinicHeader({ clinic }: { clinic: ClinicRecord }) {
   return (
     <header className="sticky top-0 z-20 border-b border-line/70 bg-paper/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
-        <Link href={base} className="min-w-0">
-          <p className="truncate font-semibold">{clinic.name}</p>
-          <p className="truncate text-xs text-ink-soft">{clinic.locations[0]?.area}, {clinic.locations[0]?.city}</p>
+        <Link href={base} className="flex min-w-0 items-center gap-3">
+          {clinic.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={clinic.logo_url} alt="" className="h-9 w-9 rounded-md object-cover" />
+          ) : null}
+          <span className="min-w-0">
+            <p className="truncate font-semibold">{clinic.name}</p>
+            <p className="truncate text-xs text-ink-soft">
+              {clinic.locations[0]?.area}, {clinic.locations[0]?.city}
+            </p>
+          </span>
         </Link>
         <nav className="hidden items-center gap-5 text-sm md:flex">
           <Link href={`${base}/services`}>Treatments</Link>
@@ -34,7 +42,9 @@ export function ClinicFooter({ clinic }: { clinic: ClinicRecord }) {
         </div>
         <div className="text-sm text-white/80">
           <p>{loc?.address_line1}</p>
-          <p>{loc?.area}, {loc?.city} {loc?.pincode}</p>
+          <p>
+            {loc?.area}, {loc?.city} {loc?.pincode}
+          </p>
           <p className="mt-2">{clinic.phone}</p>
         </div>
       </div>

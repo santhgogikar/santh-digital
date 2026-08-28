@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 80" role="img" aria-label="Santh Digital">
+  <rect x="0" y="8" width="64" height="64" rx="18" fill="#0A3F3A"/>
+  <rect x="12" y="22" width="16" height="10" rx="5" fill="none" stroke="#F3EFE6" stroke-width="2"/>
+  <rect x="36" y="22" width="16" height="10" rx="5" fill="#B0894B"/>
+  <rect x="12" y="40" width="16" height="10" rx="5" fill="none" stroke="#F3EFE6" stroke-width="2"/>
+  <rect x="36" y="40" width="16" height="10" rx="5" fill="none" stroke="#F3EFE6" stroke-width="2"/>
+  <circle cx="44" cy="59" r="3.5" fill="#C24D2C"/>
+  <text x="84" y="36" fill="#1C2A24" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="600">Santh Digital</text>
+  <text x="84" y="58" fill="#0F5F56" font-family="system-ui, 'Segoe UI', sans-serif" font-size="11" font-weight="600" letter-spacing="3.2">LOCAL SEARCH INTO APPOINTMENTS</text>
+</svg>
