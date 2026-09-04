@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getBusyAppointments, getClinicBySlug, getHolidays, getWorkingHours } from "@/lib/clinic";
+import { getBusyAppointments, getClinicBySlug, getClinicHolidays, getClinicWorkingHours } from "@/lib/clinic";
 import { bookingReference } from "@/lib/format";
 import { hasura } from "@/lib/hasura";
 import { computeSlots } from "@/lib/slots";
@@ -10,7 +10,6 @@ import { fromZonedTime } from "date-fns-tz";
 
 const schema = z.object({
   serviceId: z.string().min(8),
-  doctorId: z.string().min(8),
   start: z.string(),
   name: z.string().min(2).max(80),
   mobile: z.string().regex(/^[6-9]\d{9}$/, "Enter a 10-digit Indian mobile number."),
@@ -32,16 +31,12 @@ export async function POST(
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid booking." }, { status: 400 });
   }
 
-  const { serviceId, doctorId, start, name, mobile, email, isExisting, notes } = parsed.data;
+  const { serviceId, start, name, mobile, email, isExisting, notes } = parsed.data;
   const service = clinic.services.find((s) => s.id === serviceId);
-  const doctor = clinic.doctors.find((d) => d.id === doctorId);
+  const doctor = clinic.doctors[0];
   const location = clinic.locations.find((l) => l.is_primary) ?? clinic.locations[0];
   if (!service || !doctor || !location) {
     return NextResponse.json({ error: "Unable to place this booking." }, { status: 400 });
-  }
-
-  if (!doctor.doctor_services.some((ds) => ds.service.id === serviceId)) {
-    return NextResponse.json({ error: "This doctor does not offer that service." }, { status: 400 });
   }
 
   const startDate = new Date(start);
@@ -52,15 +47,15 @@ export async function POST(
     day: "2-digit",
   }).format(startDate);
 
-  const hours = await getWorkingHours(clinic.id, doctorId);
-  const holidays = await getHolidays(clinic.id, doctorId, dateYmd, dateYmd);
+  const hours = await getClinicWorkingHours(clinic.id);
+  const holidays = await getClinicHolidays(clinic.id, dateYmd, dateYmd);
   const dayStart = fromZonedTime(`${dateYmd}T00:00:00`, clinic.timezone);
   const dayEnd = fromZonedTime(`${dateYmd}T23:59:59`, clinic.timezone);
-  const busy = await getBusyAppointments(doctorId, dayStart.toISOString(), dayEnd.toISOString());
+  const busy = await getBusyAppointments(clinic.id, dayStart.toISOString(), dayEnd.toISOString());
   const slots = computeSlots({
     dateYmd,
     timeZone: clinic.timezone,
-    durationMinutes: service.duration_minutes,
+    durationMinutes: clinic.slot_duration_minutes || 30,
     bufferMinutes: clinic.booking_buffer_minutes,
     hours,
     busy,
@@ -167,7 +162,7 @@ export async function POST(
       {
         clinicId: clinic.id,
         locationId: location.id,
-        doctorId,
+        doctorId: doctor.id,
         serviceId,
         patientId: data.insert_patients_one.id,
         startsAt: matched.start,

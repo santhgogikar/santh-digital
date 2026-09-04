@@ -1,15 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ClinicRecord } from "@/lib/types";
 import { formatDateLong, formatSlotLabel } from "@/lib/format";
 import { nextBookableDates } from "@/lib/slots";
 
 type Slot = { start: string; end: string; label: string };
 
-export function BookingWizard({ clinic }: { clinic: ClinicRecord }) {
-  const [serviceId, setServiceId] = useState(clinic.services[0]?.id ?? "");
-  const [doctorId, setDoctorId] = useState("");
+export function BookingWizard({
+  clinic,
+  initialServiceSlug,
+}: {
+  clinic: ClinicRecord;
+  initialServiceSlug?: string;
+}) {
+  const initialService =
+    clinic.services.find((s) => s.slug === initialServiceSlug)?.id ?? clinic.services[0]?.id ?? "";
+  const [serviceId, setServiceId] = useState(initialService);
   const [date, setDate] = useState(nextBookableDates(14, new Date(), clinic.timezone)[0] ?? "");
   const [slots, setSlots] = useState<Slot[]>([]);
   const [slot, setSlot] = useState<Slot | null>(null);
@@ -17,28 +24,21 @@ export function BookingWizard({ clinic }: { clinic: ClinicRecord }) {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{
     booking_reference: string;
-    status: string;
     starts_at: string;
-    doctor: string;
     service: string;
   } | null>(null);
   const [pending, setPending] = useState(false);
 
-  const doctors = useMemo(
-    () => clinic.doctors.filter((d) => d.doctor_services.some((ds) => ds.service.id === serviceId)),
-    [clinic.doctors, serviceId],
-  );
-
   const dates = nextBookableDates(14, new Date(), clinic.timezone);
   const service = clinic.services.find((s) => s.id === serviceId);
-  const doctor = clinic.doctors.find((d) => d.id === doctorId);
+  const slotMinutes = clinic.slot_duration_minutes || 30;
 
-  async function loadSlots(nextDoctor = doctorId, nextDate = date, nextService = serviceId) {
-    if (!nextDoctor || !nextDate || !nextService) return;
+  async function loadSlots(nextDate = date, nextService = serviceId) {
+    if (!nextDate || !nextService) return;
     setLoadingSlots(true);
     setError(null);
     setSlot(null);
-    const params = new URLSearchParams({ serviceId: nextService, doctorId: nextDoctor, date: nextDate });
+    const params = new URLSearchParams({ serviceId: nextService, date: nextDate });
     const response = await fetch(`/api/c/${clinic.slug}/slots?${params}`);
     const json = (await response.json()) as { slots?: Slot[]; error?: string };
     setLoadingSlots(false);
@@ -50,6 +50,11 @@ export function BookingWizard({ clinic }: { clinic: ClinicRecord }) {
     setSlots(json.slots ?? []);
   }
 
+  useEffect(() => {
+    void loadSlots(date, serviceId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serviceId, date]);
+
   async function confirm(form: FormData) {
     if (!slot) return;
     setPending(true);
@@ -59,7 +64,6 @@ export function BookingWizard({ clinic }: { clinic: ClinicRecord }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         serviceId,
-        doctorId,
         start: slot.start,
         name: form.get("name"),
         mobile: form.get("mobile"),
@@ -77,9 +81,7 @@ export function BookingWizard({ clinic }: { clinic: ClinicRecord }) {
     }
     setDone({
       booking_reference: json.appointment.booking_reference,
-      status: json.appointment.status,
       starts_at: json.appointment.starts_at,
-      doctor: json.doctor.name,
       service: json.service.name,
     });
   }
@@ -90,13 +92,28 @@ export function BookingWizard({ clinic }: { clinic: ClinicRecord }) {
         <p className="text-xs uppercase tracking-[0.18em] text-gold">Request received</p>
         <h2 className="mt-2 text-4xl">The clinic will confirm this slot.</h2>
         <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
-          <div><dt className="text-ink-soft">Reference</dt><dd className="font-semibold">{done.booking_reference}</dd></div>
-          <div><dt className="text-ink-soft">When</dt><dd>{formatDateLong(done.starts_at, clinic.timezone)} · {formatSlotLabel(done.starts_at, clinic.timezone)}</dd></div>
-          <div><dt className="text-ink-soft">Doctor</dt><dd>{done.doctor}</dd></div>
-          <div><dt className="text-ink-soft">Treatment</dt><dd>{done.service}</dd></div>
-          <div><dt className="text-ink-soft">Clinic</dt><dd>{clinic.name}</dd></div>
+          <div>
+            <dt className="text-ink-soft">Reference</dt>
+            <dd className="font-semibold">{done.booking_reference}</dd>
+          </div>
+          <div>
+            <dt className="text-ink-soft">When</dt>
+            <dd>
+              {formatDateLong(done.starts_at, clinic.timezone)} · {formatSlotLabel(done.starts_at, clinic.timezone)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-ink-soft">Treatment</dt>
+            <dd>{done.service}</dd>
+          </div>
+          <div>
+            <dt className="text-ink-soft">Clinic</dt>
+            <dd>{clinic.name}</dd>
+          </div>
         </dl>
-        <p className="mt-6 text-sm text-ink-soft">Reception will call or WhatsApp you to confirm. Please keep this number reachable.</p>
+        <p className="mt-6 text-sm text-ink-soft">
+          Reception will call or WhatsApp you to confirm. Please keep this number reachable.
+        </p>
       </div>
     );
   }
@@ -110,7 +127,6 @@ export function BookingWizard({ clinic }: { clinic: ClinicRecord }) {
             value={serviceId}
             onChange={(e) => {
               setServiceId(e.target.value);
-              setDoctorId("");
               setSlots([]);
               setSlot(null);
             }}
@@ -118,38 +134,16 @@ export function BookingWizard({ clinic }: { clinic: ClinicRecord }) {
           >
             {clinic.services.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name} · {s.duration_minutes} min
+                {s.name}
               </option>
             ))}
           </select>
         </label>
-        <div>
-          <p className="text-sm font-medium">Doctor</p>
-          <div className="mt-2 grid gap-2">
-            {doctors.map((d) => (
-              <button
-                type="button"
-                key={d.id}
-                onClick={() => {
-                  setDoctorId(d.id);
-                  void loadSlots(d.id, date, serviceId);
-                }}
-                className={`rounded-2xl border px-4 py-3 text-left ${doctorId === d.id ? "border-teal bg-white" : "border-line bg-white/50"}`}
-              >
-                <p className="font-semibold">{d.name}</p>
-                <p className="text-xs text-ink-soft">{d.specialisation}</p>
-              </button>
-            ))}
-          </div>
-        </div>
         <label className="block">
           <span className="text-sm font-medium">Date</span>
           <select
             value={date}
-            onChange={(e) => {
-              setDate(e.target.value);
-              if (doctorId) void loadSlots(doctorId, e.target.value, serviceId);
-            }}
+            onChange={(e) => setDate(e.target.value)}
             className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2"
           >
             {dates.map((d) => (
@@ -159,13 +153,12 @@ export function BookingWizard({ clinic }: { clinic: ClinicRecord }) {
             ))}
           </select>
         </label>
+        <p className="text-sm text-ink-soft">Each slot is {slotMinutes} minutes, set by the clinic.</p>
       </div>
 
       <div className="panel p-6">
-        {!doctorId ? (
-          <p className="text-sm text-ink-soft">Select a doctor to see open slots.</p>
-        ) : loadingSlots ? (
-          <p className="text-sm text-ink-soft">Checking the chair schedule…</p>
+        {loadingSlots ? (
+          <p className="text-sm text-ink-soft">Checking open times…</p>
         ) : slots.length === 0 ? (
           <p className="text-sm text-ink-soft">No open slots on this date. Try another day.</p>
         ) : (
@@ -186,7 +179,7 @@ export function BookingWizard({ clinic }: { clinic: ClinicRecord }) {
           </>
         )}
 
-        {slot && service && doctor ? (
+        {slot && service ? (
           <form
             className="mt-6 space-y-3 border-t border-line pt-6"
             onSubmit={(e) => {
@@ -195,7 +188,7 @@ export function BookingWizard({ clinic }: { clinic: ClinicRecord }) {
             }}
           >
             <p className="text-sm">
-              {service.name} with {doctor.name} · {slot.label}
+              {service.name} · {slot.label}
             </p>
             <input name="name" required placeholder="Patient name" className="w-full rounded-xl border border-line px-3 py-2" />
             <input name="mobile" required placeholder="10-digit mobile" className="w-full rounded-xl border border-line px-3 py-2" />

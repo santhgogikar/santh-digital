@@ -85,6 +85,20 @@ test("root canal duration does not emit a slot that overruns the block", () => {
   assert.equal(slots.length, 2);
 });
 
+test("15-minute clinic slots fill a two-hour morning block", () => {
+  const slots = computeSlots({
+    dateYmd: "2026-08-21",
+    timeZone: "Asia/Kolkata",
+    durationMinutes: 15,
+    bufferMinutes: 0,
+    hours: [hours[0]],
+    busy: [],
+    holidays: [],
+    now: new Date("2026-08-20T00:00:00.000Z"),
+  });
+  assert.equal(slots.length, 8);
+});
+
 test("next bookable dates skip Sundays", () => {
   const dates = nextBookableDates(7, new Date("2026-08-21T00:00:00+05:30"), "Asia/Kolkata");
   assert.equal(dates.includes("2026-08-23"), false);

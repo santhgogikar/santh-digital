@@ -18,7 +18,7 @@ export type ClinicService = {
   name: string;
   slug: string;
   description: string | null;
-  duration_minutes: number;
+  duration_minutes?: number;
   display_order: number;
 };
 
@@ -43,6 +43,10 @@ export type ClinicRecord = {
   timezone: string;
   booking_mode: BookingMode;
   booking_buffer_minutes: number;
+  slot_duration_minutes: number;
+  show_treatments: boolean;
+  show_doctors: boolean;
+  show_hours: boolean;
   google_rating: number | null;
   google_review_count: number | null;
   about: string | null;
@@ -53,6 +57,7 @@ export type ClinicRecord = {
   locations: ClinicLocation[];
   doctors: ClinicDoctor[];
   services: ClinicService[];
+  working_hours: WorkingHour[];
 };
 
 export type WorkingHour = {

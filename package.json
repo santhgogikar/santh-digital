@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test scripts/slots.test.ts scripts/date-range.test.ts scripts/notify.test.ts scripts/dashboard-data.test.ts scripts/theme.test.ts scripts/brand-assets.test.ts",
+    "test": "node --import tsx --test scripts/slots.test.ts scripts/date-range.test.ts scripts/notify.test.ts scripts/dashboard-data.test.ts scripts/theme.test.ts scripts/brand-assets.test.ts scripts/hours-display.test.ts",
     "test:e2e": "node scripts/e2e.mjs",
     "verify": "tsc --noEmit && eslint src scripts --max-warnings 0 && npm test",
     "stack": "docker compose up -d",

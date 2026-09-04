@@ -9,7 +9,6 @@ import { slugify } from "@/lib/slug";
 const schema = z.object({
   name: z.string().min(3).max(80),
   description: z.string().min(8).max(400),
-  durationMinutes: z.number().int().min(10).max(240),
   doctorIds: z.array(z.string()).optional(),
 });
 
@@ -50,7 +49,7 @@ export async function POST(request: NextRequest) {
       name: parsed.data.name.trim(),
       slug: `${slugify(parsed.data.name)}-${String(Date.now()).slice(-4)}`,
       description: parsed.data.description.trim(),
-      duration: parsed.data.durationMinutes,
+      duration: clinic.slot_duration_minutes || 30,
       order: clinic.services.length + 1,
     },
   );

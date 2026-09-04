@@ -18,11 +18,6 @@ export function ClinicHeader({ clinic }: { clinic: ClinicRecord }) {
             </p>
           </span>
         </Link>
-        <nav className="hidden items-center gap-5 text-sm md:flex">
-          <Link href={`${base}/services`}>Treatments</Link>
-          <Link href={`${base}/doctors`}>Doctors</Link>
-          <Link href={`${base}/contact`}>Contact</Link>
-        </nav>
         <Link href={`${base}/book`} className="btn-clay !px-4 !py-2 text-sm">
           Book appointment
         </Link>

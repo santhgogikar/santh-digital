@@ -23,6 +23,13 @@
           table:
             name: services
             schema: public
+    - name: working_hours
+      using:
+        foreign_key_constraint_on:
+          column: clinic_id
+          table:
+            name: working_hours
+            schema: public
 - table:
     name: locations
     schema: public

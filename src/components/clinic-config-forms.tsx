@@ -81,7 +81,6 @@ export function ServiceForm({ doctors }: { doctors: ClinicDoctor[] }) {
       body: JSON.stringify({
         name: form.get("name"),
         description: form.get("description"),
-        durationMinutes: Number(form.get("durationMinutes")),
         doctorIds,
       }),
     });
@@ -100,10 +99,6 @@ export function ServiceForm({ doctors }: { doctors: ClinicDoctor[] }) {
       <h2 className="text-xl">Add a service</h2>
       <input name="name" required placeholder="Service name" className="w-full rounded-xl border border-line px-3 py-2" />
       <textarea name="description" required placeholder="What the patient should know" rows={3} className="w-full rounded-xl border border-line px-3 py-2" />
-      <label className="block text-sm">
-        Duration (minutes)
-        <input name="durationMinutes" type="number" required min={10} step={5} defaultValue={30} className="mt-1 w-full rounded-xl border border-line px-3 py-2" />
-      </label>
       <fieldset>
         <legend className="text-sm font-medium">Doctors who provide this</legend>
         <div className="mt-2 grid gap-2">

@@ -15,8 +15,10 @@ const CLINIC_FIELDS = `
   timezone
   booking_mode
   booking_buffer_minutes
-  google_rating
-  google_review_count
+  slot_duration_minutes
+  show_treatments
+  show_doctors
+  show_hours
   about
   locations(order_by: { is_primary: desc }) {
     id
@@ -51,8 +53,14 @@ const CLINIC_FIELDS = `
     name
     slug
     description
-    duration_minutes
     display_order
+  }
+  working_hours(where: { doctor_id: { _is_null: true } }, order_by: [{ day_of_week: asc }, { start_time: asc }]) {
+    id
+    doctor_id
+    day_of_week
+    start_time
+    end_time
   }
 `;
 
@@ -80,14 +88,12 @@ export async function getClinicById(id: string) {
   return data.clinics_by_pk;
 }
 
-export async function getWorkingHours(clinicId: string, doctorId: string) {
+export async function getClinicWorkingHours(clinicId: string) {
   const data = await hasura<{ working_hours: WorkingHour[] }>(
-    `query Hours($clinicId: uuid!, $doctorId: uuid!) {
+    `query ClinicHours($clinicId: uuid!) {
       working_hours(
-        where: {
-          clinic_id: { _eq: $clinicId }
-          _or: [{ doctor_id: { _eq: $doctorId } }, { doctor_id: { _is_null: true } }]
-        }
+        where: { clinic_id: { _eq: $clinicId }, doctor_id: { _is_null: true } }
+        order_by: [{ day_of_week: asc }, { start_time: asc }]
       ) {
         id
         doctor_id
@@ -96,42 +102,51 @@ export async function getWorkingHours(clinicId: string, doctorId: string) {
         end_time
       }
     }`,
-    { clinicId, doctorId },
+    { clinicId },
   );
-  const doctorSpecific = data.working_hours.filter((h) => h.doctor_id === doctorId);
-  return doctorSpecific.length ? doctorSpecific : data.working_hours;
+  if (data.working_hours.length) return data.working_hours;
+
+  const fallback = await hasura<{ working_hours: WorkingHour[] }>(
+    `query AnyHours($clinicId: uuid!) {
+      working_hours(where: { clinic_id: { _eq: $clinicId } }, limit: 40) {
+        id
+        doctor_id
+        day_of_week
+        start_time
+        end_time
+      }
+    }`,
+    { clinicId },
+  );
+  return fallback.working_hours;
 }
 
-export async function getHolidays(clinicId: string, doctorId: string, from: string, to: string) {
+export async function getClinicHolidays(clinicId: string, from: string, to: string) {
   const data = await hasura<{ holidays: { on_date: string }[] }>(
-    `query Holidays($clinicId: uuid!, $doctorId: uuid!, $from: date!, $to: date!) {
+    `query Holidays($clinicId: uuid!, $from: date!, $to: date!) {
       holidays(
         where: {
           clinic_id: { _eq: $clinicId }
           on_date: { _gte: $from, _lte: $to }
-          _or: [{ doctor_id: { _eq: $doctorId } }, { doctor_id: { _is_null: true } }]
+          doctor_id: { _is_null: true }
         }
       ) {
         on_date
       }
     }`,
-    { clinicId, doctorId, from, to },
+    { clinicId, from, to },
   );
   return data.holidays.map((h) => h.on_date);
 }
 
-export async function getBusyAppointments(
-  doctorId: string,
-  fromIso: string,
-  toIso: string,
-) {
+export async function getBusyAppointments(clinicId: string, fromIso: string, toIso: string) {
   const data = await hasura<{
     appointments: { starts_at: string; ends_at: string }[];
   }>(
-    `query Busy($doctorId: uuid!, $from: timestamptz!, $to: timestamptz!) {
+    `query Busy($clinicId: uuid!, $from: timestamptz!, $to: timestamptz!) {
       appointments(
         where: {
-          doctor_id: { _eq: $doctorId }
+          clinic_id: { _eq: $clinicId }
           status: { _nin: [cancelled, no_show] }
           _and: [
             { starts_at: { _gte: $from } }
@@ -143,7 +158,7 @@ export async function getBusyAppointments(
         ends_at
       }
     }`,
-    { doctorId, from: fromIso, to: toIso },
+    { clinicId, from: fromIso, to: toIso },
   );
   return data.appointments;
 }

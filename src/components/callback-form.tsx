@@ -35,8 +35,8 @@ export function CallbackForm({ slug }: { slug: string }) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
-      <p className="serif text-2xl">Not sure which treatment you need?</p>
-      <p className="text-sm text-ink-soft">Request a callback. No account required.</p>
+      <p className="serif text-2xl">Want us to call you back?</p>
+      <p className="text-sm text-ink-soft">Share your number. Reception will get in touch — no booking needed.</p>
       <input name="name" required placeholder="Your name" className="w-full rounded-xl border border-line px-3 py-2" />
       <input name="mobile" required placeholder="Mobile number" className="w-full rounded-xl border border-line px-3 py-2" />
       <textarea name="requirement" required placeholder="Tooth pain, cleaning, implant questions…" className="w-full rounded-xl border border-line px-3 py-2" rows={3} />

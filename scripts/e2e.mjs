@@ -62,6 +62,15 @@ async function main() {
   if (clinic.status !== 200 || !clinic.text.includes("Smile Care Dental")) {
     throw new Error(`Clinic home failed: ${clinic.status}`);
   }
+  if (clinic.text.includes("on Google") || clinic.text.includes("312 reviews")) {
+    throw new Error("Clinic home still shows Google review counts.");
+  }
+  if (!clinic.text.includes("Visit us") || !clinic.text.includes("Clinic timings")) {
+    throw new Error("Clinic home missing Visit us / Clinic timings.");
+  }
+  if (clinic.text.includes(`/c/${slug}/services`) || clinic.text.includes(`/c/${slug}/doctors`) || clinic.text.includes(`/c/${slug}/contact`)) {
+    throw new Error("Clinic home still links to removed tab pages.");
+  }
 
   const bookPage = await html(`/c/${slug}/book`);
   if (bookPage.status !== 200 || !bookPage.text.includes("Book an appointment")) {
@@ -78,18 +87,14 @@ async function main() {
       query: `query {
         clinics(where: { slug: { _eq: "${slug}" } }) {
           services(where: { slug: { _eq: "dental-consultation" } }) { id }
-          doctors(where: { slug: { _eq: "ananya-reddy" } }) { id }
         }
       }`,
     }),
   });
   const ids = await idsRes.json();
   const serviceId = ids.data.clinics[0].services[0].id;
-  const doctorId = ids.data.clinics[0].doctors[0].id;
   let date = nextWeekdayYmd();
-  let slots = await json(
-    `/api/c/${slug}/slots?serviceId=${serviceId}&doctorId=${doctorId}&date=${date}`,
-  );
+  let slots = await json(`/api/c/${slug}/slots?serviceId=${serviceId}&date=${date}`);
   for (let i = 1; i < 14 && (!slots.body.slots || slots.body.slots.length === 0); i += 1) {
     const d = new Date(`${date}T12:00:00+05:30`);
     d.setDate(d.getDate() + 1);
@@ -100,9 +105,7 @@ async function main() {
       day: "2-digit",
     }).format(d);
     if (new Date(`${date}T12:00:00+05:30`).getDay() === 0) continue;
-    slots = await json(
-      `/api/c/${slug}/slots?serviceId=${serviceId}&doctorId=${doctorId}&date=${date}`,
-    );
+    slots = await json(`/api/c/${slug}/slots?serviceId=${serviceId}&date=${date}`);
   }
   if (slots.status !== 200 || !Array.isArray(slots.body.slots) || slots.body.slots.length < 1) {
     throw new Error(`Slots failed: ${JSON.stringify(slots.body)}`);
@@ -115,7 +118,6 @@ async function main() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       serviceId,
-      doctorId,
       start: slot.start,
       name: "Test Patient",
       mobile,
@@ -134,7 +136,6 @@ async function main() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       serviceId,
-      doctorId,
       start: slot.start,
       name: "Second Patient",
       mobile: `9${Math.floor(100000000 + Math.random() * 899999999)}`,

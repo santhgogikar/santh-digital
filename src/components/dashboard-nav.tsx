@@ -11,7 +11,7 @@ const links = [
   { href: "/dashboard/leads", label: "Leads" },
   { href: "/dashboard/doctors", label: "Doctors" },
   { href: "/dashboard/services", label: "Services" },
-  { href: "/dashboard/hours", label: "Hours" },
+  { href: "/dashboard/hours", label: "Timings" },
 ];
 
 function isActive(pathname: string, href: string) {
