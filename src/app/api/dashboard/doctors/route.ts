@@ -5,6 +5,8 @@ import { requireClinicSession } from "@/lib/auth";
 import { getClinicById } from "@/lib/clinic";
 import { hasura } from "@/lib/hasura";
 import { slugify } from "@/lib/slug";
+import { requireOperableClinic } from "@/lib/scope";
+import { handleAuthError } from "@/lib/api-error";
 
 const schema = z.object({
   name: z.string().min(3).max(80),
@@ -21,14 +23,15 @@ const DEFAULT_SESSIONS = [
 ];
 
 export async function POST(request: NextRequest) {
-  const session = await requireClinicSession();
-  if (!session.clinicId) return NextResponse.json({ error: "Forbidden." }, { status: 403 });
-  const parsed = schema.safeParse(await request.json());
+  try {
+    const session = await requireClinicSession();
+    const { clinicId } = await requireOperableClinic(session);
+    const parsed = schema.safeParse(await request.json());
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid doctor." }, { status: 400 });
   }
 
-  const clinic = await getClinicById(session.clinicId);
+  const clinic = await getClinicById(clinicId);
   if (!clinic) return NextResponse.json({ error: "Clinic not found." }, { status: 404 });
   const location = clinic.locations[0];
   const slug = slugify(parsed.data.name.replace(/^dr\.?\s+/i, ""));
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
       ) { id }
     }`,
     {
-      clinicId: session.clinicId,
+      clinicId,
       locationId: location?.id ?? null,
       name: parsed.data.name.trim(),
       slug: `${slug}-${String(Date.now()).slice(-4)}`,
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest) {
   for (let day = 1; day <= 6; day += 1) {
     for (const sessionHours of DEFAULT_SESSIONS) {
       hours.push({
-        clinic_id: session.clinicId,
+        clinic_id: clinicId,
         doctor_id: doctor.insert_doctors_one.id,
         location_id: location?.id ?? null,
         day_of_week: day,
@@ -110,4 +113,7 @@ export async function POST(request: NextRequest) {
   revalidatePath("/dashboard/doctors");
   revalidatePath("/c/smile-care-mehdipatnam");
   return NextResponse.json({ ok: true, id: doctor.insert_doctors_one.id });
+  } catch (error) {
+    return handleAuthError(error);
+  }
 }

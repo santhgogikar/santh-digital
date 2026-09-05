@@ -28,7 +28,7 @@ test("day sheet hides pending so the inbox is not duplicated", () => {
 });
 
 test("bookings views query upcoming pending independently of a report range", () => {
-  assert.match(appointmentViewFilters.pending, /status: \{ _eq: pending \}/);
+  assert.match(appointmentViewFilters.pending, /clinic_id: \{ _in: \$clinicIds \}/);
   assert.match(appointmentViewFilters.pending, /starts_at: \{ _gte: \$todayStart \}/);
   assert.doesNotMatch(appointmentViewFilters.pending, /tomorrowStart/);
   assert.match(appointmentViewFilters.upcoming, /_in: \[pending, confirmed\]/);

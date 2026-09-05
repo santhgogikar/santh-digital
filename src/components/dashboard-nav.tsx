@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { NotificationBell } from "@/components/notification-bell";
 import { BrandMark } from "@/components/brand-mark";
+import { BranchSwitcher } from "@/components/branch-switcher";
 import { usePathname, useRouter } from "next/navigation";
+import type { BranchSummary } from "@/lib/scope";
 
 const links = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/appointments", label: "Bookings" },
   { href: "/dashboard/leads", label: "Leads" },
+  { href: "/dashboard/clinic", label: "Clinic" },
   { href: "/dashboard/doctors", label: "Doctors" },
   { href: "/dashboard/services", label: "Services" },
   { href: "/dashboard/hours", label: "Timings" },
@@ -19,7 +22,21 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-export function DashboardNav({ clinicName }: { clinicName: string }) {
+export function DashboardNav({
+  clinicName,
+  roleLabel,
+  branches,
+  activeClinicId,
+  allBranches,
+  showBranchSwitcher,
+}: {
+  clinicName: string;
+  roleLabel: string;
+  branches: BranchSummary[];
+  activeClinicId: string | null;
+  allBranches: boolean;
+  showBranchSwitcher: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -39,6 +56,7 @@ export function DashboardNav({ clinicName }: { clinicName: string }) {
               Santh Digital
             </p>
             <p className="truncate font-semibold">{clinicName}</p>
+            <p className="text-[11px] text-ink-soft">{roleLabel}</p>
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
@@ -47,6 +65,11 @@ export function DashboardNav({ clinicName }: { clinicName: string }) {
             </button>
           </div>
         </div>
+        {showBranchSwitcher ? (
+          <div className="px-2 pb-2">
+            <BranchSwitcher branches={branches} activeClinicId={activeClinicId} allBranches={allBranches} />
+          </div>
+        ) : null}
         <nav className="grid grid-cols-3 gap-2 px-3 pb-3">
           {links.map((link) => {
             const active = isActive(pathname, link.href);
@@ -73,9 +96,13 @@ export function DashboardNav({ clinicName }: { clinicName: string }) {
               Santh Digital
             </p>
             <p className="mt-1 font-semibold">{clinicName}</p>
+            <p className="text-xs text-ink-soft">{roleLabel}</p>
           </div>
           <NotificationBell />
         </div>
+        {showBranchSwitcher ? (
+          <BranchSwitcher branches={branches} activeClinicId={activeClinicId} allBranches={allBranches} />
+        ) : null}
         <nav className="flex flex-1 flex-col gap-1 px-3">
           {links.map((link) => {
             const active = isActive(pathname, link.href);

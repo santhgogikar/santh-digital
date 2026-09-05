@@ -4,10 +4,12 @@ import { hasura } from "@/lib/hasura";
 import { formatDateTime } from "@/lib/format";
 import { StatusSelect } from "@/components/status-select";
 import { telLink, whatsappLink } from "@/lib/slug";
+import { getDashboardScope } from "@/lib/scope";
 
 export default async function LeadsPage() {
   const session = await getSession();
-  if (!session?.clinicId) redirect("/login");
+  if (!session) redirect("/login");
+  const scope = await getDashboardScope(session);
 
   const data = await hasura<{
     leads: {
@@ -19,12 +21,12 @@ export default async function LeadsPage() {
       created_at: string;
     }[];
   }>(
-    `query Leads($clinicId: uuid!) {
-      leads(where: { clinic_id: { _eq: $clinicId } }, order_by: { created_at: desc }, limit: 80) {
+    `query Leads($clinicIds: [uuid!]!) {
+      leads(where: { clinic_id: { _in: $clinicIds } }, order_by: { created_at: desc }, limit: 80) {
         id name mobile requirement status created_at
       }
     }`,
-    { clinicId: session.clinicId },
+    { clinicIds: scope.clinicIds },
   );
 
   return (

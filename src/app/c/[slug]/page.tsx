@@ -4,13 +4,14 @@ import { CallbackForm } from "@/components/callback-form";
 import { ClinicFooter, ClinicHeader } from "@/components/clinic-chrome";
 import { getClinicBySlug } from "@/lib/clinic";
 import { clinicHoursLines } from "@/lib/hours-display";
+import { clinicBrandName, clinicDescription, clinicFullAddress, clinicMapUrl, clinicShortAddress } from "@/lib/clinic-display";
 
 export default async function ClinicHome({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const clinic = await getClinicBySlug(slug);
   if (!clinic) notFound();
-  const loc = clinic.locations[0];
   const hourLines = clinicHoursLines(clinic.working_hours ?? []);
+  const mapUrl = clinicMapUrl(clinic);
 
   return (
     <div>
@@ -18,10 +19,10 @@ export default async function ClinicHome({ params }: { params: Promise<{ slug: s
       <main className="mx-auto max-w-6xl px-5">
         <section className="grid gap-10 py-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
-            <h1 className="text-5xl leading-[1.05] sm:text-6xl">{clinic.name}</h1>
-            <p className="mt-4 max-w-xl text-lg text-ink-soft">{clinic.tagline}</p>
+            <h1 className="text-5xl leading-[1.05] sm:text-6xl">{clinicBrandName(clinic)}</h1>
+            <p className="mt-4 max-w-xl text-lg text-ink-soft">{clinicDescription(clinic)}</p>
             <p className="mt-3 text-sm text-ink-soft">
-              {loc?.area}, {loc?.city} · {clinic.phone}
+              {clinicShortAddress(clinic)} · {clinic.phone}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href={`/c/${clinic.slug}/book`} className="btn-clay">
@@ -80,12 +81,9 @@ export default async function ClinicHome({ params }: { params: Promise<{ slug: s
           <div className="panel p-6">
             <h2 className="text-3xl">Visit us</h2>
             <div className="mt-4 space-y-1 text-ink-soft">
-              <p>{loc?.address_line1}</p>
-              <p>
-                {loc?.area}, {loc?.city}, {loc?.state} {loc?.pincode}
-              </p>
-              {loc?.google_maps_url ? (
-                <a href={loc.google_maps_url} className="mt-4 inline-block font-semibold text-teal" target="_blank" rel="noreferrer">
+              <p className="whitespace-pre-line">{clinicFullAddress(clinic)}</p>
+              {mapUrl ? (
+                <a href={mapUrl} className="mt-4 inline-block font-semibold text-teal" target="_blank" rel="noreferrer">
                   Open in Maps
                 </a>
               ) : null}

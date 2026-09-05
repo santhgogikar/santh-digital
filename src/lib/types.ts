@@ -33,12 +33,22 @@ export type ClinicDoctor = {
   doctor_services: { service: { id: string; name: string; slug: string } }[];
 };
 
+export type ClinicGroup = {
+  id: string;
+  name: string;
+  description: string | null;
+};
+
 export type ClinicRecord = {
   id: string;
   name: string;
   slug: string;
   tagline: string | null;
   phone: string | null;
+  short_address: string | null;
+  full_address: string | null;
+  map_url: string | null;
+  group: ClinicGroup | null;
   email: string | null;
   timezone: string;
   booking_mode: BookingMode;

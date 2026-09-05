@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getClinicById } from "@/lib/clinic";
 import { listAppointmentsForView } from "@/lib/dashboard-data";
 import { parseAppointmentView } from "@/lib/date-range";
 import { AppointmentList } from "@/components/appointment-list";
+import { getDashboardScope } from "@/lib/scope";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -45,12 +45,11 @@ export default async function AppointmentsPage({
   searchParams: Promise<{ view?: string }>;
 }) {
   const session = await getSession();
-  if (!session?.clinicId) redirect("/login");
-  const clinic = await getClinicById(session.clinicId);
-  if (!clinic) redirect("/login");
+  if (!session) redirect("/login");
+  const scope = await getDashboardScope(session);
 
   const view = parseAppointmentView((await searchParams).view);
-  const rows = await listAppointmentsForView(session.clinicId, view);
+  const rows = await listAppointmentsForView(scope.clinicIds, view);
   const meta = copy[view];
 
   return (
@@ -74,7 +73,7 @@ export default async function AppointmentsPage({
         })}
       </div>
       <h2 className="mt-8 text-2xl">{meta.title}</h2>
-      <AppointmentList rows={rows} clinicName={clinic.name} empty={meta.empty} />
+      <AppointmentList rows={rows} clinicName={scope.groupName} empty={meta.empty} />
     </div>
   );
 }

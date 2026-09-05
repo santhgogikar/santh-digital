@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { getClinicById } from "@/lib/clinic";
 import { getDashboardRange } from "@/lib/dashboard-data";
 import { parseDashboardRange } from "@/lib/date-range";
+import { getDashboardScope } from "@/lib/scope";
 import { formatDateTime } from "@/lib/format";
 import { AppointmentList } from "@/components/appointment-list";
 import { DateRangeBar } from "@/components/date-range-bar";
@@ -19,13 +19,14 @@ export default async function DashboardHome({
   searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const session = await getSession();
-  if (!session?.clinicId) redirect("/login");
-  const clinic = await getClinicById(session.clinicId);
-  if (!clinic) redirect("/login");
+  if (!session) redirect("/login");
+  const scope = await getDashboardScope(session);
+  const themeId = scope.activeClinicId ?? scope.clinicIds[0];
+  if (!themeId) redirect("/login");
 
   const params = await searchParams;
   const { from, to } = parseDashboardRange(params.from, params.to);
-  const data = await getDashboardRange(session.clinicId, from, to);
+  const data = await getDashboardRange(scope.clinicIds, from, to);
   const sameDay = from === to;
 
   const rangeCards = [
@@ -43,6 +44,7 @@ export default async function DashboardHome({
       <h1 className="text-3xl sm:text-4xl">Dashboard</h1>
       <p className="mt-1 text-sm text-ink-soft">
         Confirm new website bookings first. The date range below is the day sheet and report — not the inbox.
+        {scope.allBranches && scope.branches.length > 1 ? " Showing all branches." : null}
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -69,7 +71,7 @@ export default async function DashboardHome({
       </div>
       <AppointmentList
         rows={data.needsConfirmation}
-        clinicName={clinic.name}
+        clinicName={scope.groupName}
         empty="No open requests. New website bookings will appear here even if the visit is next week."
       />
 
@@ -77,7 +79,7 @@ export default async function DashboardHome({
         <>
           <h2 className="mt-8 text-2xl">Past slots still pending</h2>
           <p className="mt-1 text-sm text-ink-soft">These still block the diary until you cancel or mark no-show.</p>
-          <AppointmentList rows={data.overduePending} clinicName={clinic.name} empty="" />
+          <AppointmentList rows={data.overduePending} clinicName={scope.groupName} empty="" />
         </>
       ) : null}
 
@@ -101,7 +103,7 @@ export default async function DashboardHome({
       <h3 className="mt-8 text-xl">Visits in this range</h3>
       <AppointmentList
         rows={data.daySheet}
-        clinicName={clinic.name}
+        clinicName={scope.groupName}
         empty="No confirmed, completed, or cancelled visits in this date range. Pending requests are listed in Needs confirmation."
       />
 
@@ -123,7 +125,7 @@ export default async function DashboardHome({
               </a>
               <a
                 className="rounded-full border border-teal px-3 py-2 text-sm font-semibold text-teal"
-                href={whatsappLink(lead.mobile, `Hello ${lead.name}, this is a callback from ${clinic.name}.`)}
+                href={whatsappLink(lead.mobile, `Hello ${lead.name}, this is a callback from ${scope.groupName}.`)}
                 target="_blank"
                 rel="noreferrer"
               >

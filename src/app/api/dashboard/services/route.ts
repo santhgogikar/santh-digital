@@ -5,6 +5,8 @@ import { requireClinicSession } from "@/lib/auth";
 import { getClinicById } from "@/lib/clinic";
 import { hasura } from "@/lib/hasura";
 import { slugify } from "@/lib/slug";
+import { requireOperableClinic } from "@/lib/scope";
+import { handleAuthError } from "@/lib/api-error";
 
 const schema = z.object({
   name: z.string().min(3).max(80),
@@ -13,15 +15,16 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const session = await requireClinicSession();
-  if (!session.clinicId) return NextResponse.json({ error: "Forbidden." }, { status: 403 });
-  const parsed = schema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid service." }, { status: 400 });
-  }
+  try {
+    const session = await requireClinicSession();
+    const { clinicId } = await requireOperableClinic(session);
+    const parsed = schema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid service." }, { status: 400 });
+    }
 
-  const clinic = await getClinicById(session.clinicId);
-  if (!clinic) return NextResponse.json({ error: "Clinic not found." }, { status: 404 });
+    const clinic = await getClinicById(clinicId);
+    if (!clinic) return NextResponse.json({ error: "Clinic not found." }, { status: 404 });
 
   const created = await hasura<{ insert_services_one: { id: string } }>(
     `mutation AddService(
@@ -45,7 +48,7 @@ export async function POST(request: NextRequest) {
       ) { id }
     }`,
     {
-      clinicId: session.clinicId,
+      clinicId,
       name: parsed.data.name.trim(),
       slug: `${slugify(parsed.data.name)}-${String(Date.now()).slice(-4)}`,
       description: parsed.data.description.trim(),
@@ -72,4 +75,7 @@ export async function POST(request: NextRequest) {
   revalidatePath("/dashboard/services");
   revalidatePath("/dashboard/doctors");
   return NextResponse.json({ ok: true, id: created.insert_services_one.id });
+  } catch (error) {
+    return handleAuthError(error);
+  }
 }

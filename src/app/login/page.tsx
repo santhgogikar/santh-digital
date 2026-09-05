@@ -23,13 +23,13 @@ export default function LoginPage() {
         password: form.get("password"),
       }),
     });
+    const json = (await response.json()) as { error?: string; role?: string };
     setPending(false);
     if (!response.ok) {
-      const json = (await response.json()) as { error?: string };
       setError(json.error ?? "Could not sign in.");
       return;
     }
-    router.push("/dashboard");
+    router.push(json.role === "platform_admin" ? "/platform" : "/dashboard");
     router.refresh();
   }
 
@@ -67,7 +67,9 @@ export default function LoginPage() {
             {pending ? "Signing in…" : "Sign in"}
           </button>
         </form>
-        <p className="mt-4 text-xs text-ink-soft">Demo: admin@smilecare.demo / clinic123</p>
+        <p className="mt-4 text-xs text-ink-soft">
+          Branch: admin@smilecare.demo · Clinic: clinic@smilecare.demo · System: santh@santh.digital — password clinic123
+        </p>
       </div>
     </div>
   );

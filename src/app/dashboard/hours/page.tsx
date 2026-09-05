@@ -2,13 +2,17 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { hasura } from "@/lib/hasura";
 import { getClinicById } from "@/lib/clinic";
+import { getDashboardScope } from "@/lib/scope";
 import { HoursEditor } from "@/components/hours-editor";
 import { SiteToggle, SlotDurationSelect } from "@/components/site-toggles";
+import { SelectBranchNote } from "@/components/select-branch-note";
 
 export default async function HoursPage() {
   const session = await getSession();
-  if (!session?.clinicId) redirect("/login");
-  const clinic = await getClinicById(session.clinicId);
+  if (!session) redirect("/login");
+  const scope = await getDashboardScope(session);
+  if (!scope.activeClinicId) return <SelectBranchNote />;
+  const clinic = await getClinicById(scope.activeClinicId);
   if (!clinic) redirect("/login");
 
   const data = await hasura<{
@@ -30,14 +34,14 @@ export default async function HoursPage() {
         end_time
       }
     }`,
-    { clinicId: session.clinicId },
+    { clinicId: scope.activeClinicId },
   );
 
   return (
     <div>
       <h1 className="text-4xl">Clinic timings</h1>
       <p className="mt-1 text-sm text-ink-soft">
-        These sessions appear on the website (if enabled) and generate booking slots.
+        These sessions appear on this branch website (if enabled) and generate booking slots.
       </p>
       <SiteToggle
         field="show_hours"

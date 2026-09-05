@@ -1,20 +1,36 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 
+export type StaffRole = "platform_admin" | "clinic_admin" | "receptionist" | "doctor";
+
 export type SessionUser = {
   id: string;
   email: string;
   name: string;
-  role: "platform_admin" | "clinic_admin" | "receptionist" | "doctor";
+  role: StaffRole;
   clinicId: string | null;
+  groupId: string | null;
 };
 
 const COOKIE = "sd_session";
+export const BRANCH_COOKIE = "sd_branch";
 
 function secret() {
   const value = process.env.AUTH_SECRET;
   if (!value) throw new Error("AUTH_SECRET is not set.");
   return new TextEncoder().encode(value);
+}
+
+export function isSystemAdmin(session: SessionUser) {
+  return session.role === "platform_admin";
+}
+
+export function isClinicAdmin(session: SessionUser) {
+  return session.role === "clinic_admin" && Boolean(session.groupId) && !session.clinicId;
+}
+
+export function isBranchAdmin(session: SessionUser) {
+  return (session.role === "clinic_admin" || session.role === "receptionist" || session.role === "doctor") && Boolean(session.clinicId);
 }
 
 export async function createSessionToken(user: SessionUser) {
@@ -24,6 +40,7 @@ export async function createSessionToken(user: SessionUser) {
     name: user.name,
     role: user.role,
     clinicId: user.clinicId,
+    groupId: user.groupId,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -40,6 +57,7 @@ export async function readSessionFromToken(token: string): Promise<SessionUser |
       name: String(payload.name),
       role: payload.role as SessionUser["role"],
       clinicId: (payload.clinicId as string | null) ?? null,
+      groupId: (payload.groupId as string | null) ?? null,
     };
   } catch {
     return null;
@@ -55,15 +73,17 @@ export async function getSession(): Promise<SessionUser | null> {
 
 export async function requireClinicSession() {
   const session = await getSession();
-  if (!session) {
+  if (!session) throw new Error("UNAUTHENTICATED");
+  if (isSystemAdmin(session)) throw new Error("FORBIDDEN");
+  if (!isClinicAdmin(session) && !isBranchAdmin(session)) {
     throw new Error("UNAUTHENTICATED");
   }
-  if (session.role === "platform_admin") {
-    return session;
-  }
-  if (!session.clinicId) {
-    throw new Error("UNAUTHENTICATED");
-  }
+  return session;
+}
+
+export async function requireSystemAdmin() {
+  const session = await getSession();
+  if (!session || !isSystemAdmin(session)) throw new Error("UNAUTHENTICATED");
   return session;
 }
 

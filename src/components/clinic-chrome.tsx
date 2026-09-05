@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ClinicRecord } from "@/lib/types";
+import { clinicBrandName, clinicDescription, clinicShortAddress, clinicFullAddress } from "@/lib/clinic-display";
 
 export function ClinicHeader({ clinic }: { clinic: ClinicRecord }) {
   const base = `/c/${clinic.slug}`;
@@ -12,10 +13,8 @@ export function ClinicHeader({ clinic }: { clinic: ClinicRecord }) {
             <img src={clinic.logo_url} alt="" className="h-9 w-9 rounded-md object-cover" />
           ) : null}
           <span className="min-w-0">
-            <p className="truncate font-semibold">{clinic.name}</p>
-            <p className="truncate text-xs text-ink-soft">
-              {clinic.locations[0]?.area}, {clinic.locations[0]?.city}
-            </p>
+            <p className="truncate font-semibold">{clinicBrandName(clinic)}</p>
+            <p className="truncate text-xs text-ink-soft">{clinicShortAddress(clinic)}</p>
           </span>
         </Link>
         <Link href={`${base}/book`} className="btn-clay !px-4 !py-2 text-sm">
@@ -27,19 +26,15 @@ export function ClinicHeader({ clinic }: { clinic: ClinicRecord }) {
 }
 
 export function ClinicFooter({ clinic }: { clinic: ClinicRecord }) {
-  const loc = clinic.locations[0];
   return (
     <footer className="mt-16 border-t border-line bg-teal-deep text-white">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-10 sm:flex-row sm:justify-between">
         <div>
-          <p className="serif text-2xl">{clinic.name}</p>
-          <p className="mt-2 max-w-sm text-sm text-white/70">{clinic.tagline}</p>
+          <p className="serif text-2xl">{clinicBrandName(clinic)}</p>
+          <p className="mt-2 max-w-sm text-sm text-white/70">{clinicDescription(clinic)}</p>
         </div>
-        <div className="text-sm text-white/80">
-          <p>{loc?.address_line1}</p>
-          <p>
-            {loc?.area}, {loc?.city} {loc?.pincode}
-          </p>
+        <div className="whitespace-pre-line text-sm text-white/80">
+          <p>{clinicFullAddress(clinic)}</p>
           <p className="mt-2">{clinic.phone}</p>
         </div>
       </div>

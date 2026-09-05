@@ -7,6 +7,14 @@ const CLINIC_FIELDS = `
   slug
   tagline
   phone
+  short_address
+  full_address
+  map_url
+  group {
+    id
+    name
+    description
+  }
   email
   logo_url
   brand_primary
@@ -172,6 +180,7 @@ export async function findUserByEmail(email: string) {
       name: string;
       role: "platform_admin" | "clinic_admin" | "receptionist" | "doctor";
       clinic_id: string | null;
+      group_id: string | null;
       is_active: boolean;
     }[];
   }>(
@@ -183,6 +192,7 @@ export async function findUserByEmail(email: string) {
         name
         role
         clinic_id
+        group_id
         is_active
       }
     }`,

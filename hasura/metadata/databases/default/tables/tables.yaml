@@ -1,6 +1,28 @@
 - table:
+    name: clinic_groups
+    schema: public
+  array_relationships:
+    - name: clinics
+      using:
+        foreign_key_constraint_on:
+          column: group_id
+          table:
+            name: clinics
+            schema: public
+    - name: users
+      using:
+        foreign_key_constraint_on:
+          column: group_id
+          table:
+            name: users
+            schema: public
+- table:
     name: clinics
     schema: public
+  object_relationships:
+    - name: group
+      using:
+        foreign_key_constraint_on: group_id
   array_relationships:
     - name: locations
       using:
@@ -44,6 +66,9 @@
     - name: clinic
       using:
         foreign_key_constraint_on: clinic_id
+    - name: group
+      using:
+        foreign_key_constraint_on: group_id
 - table:
     name: doctors
     schema: public

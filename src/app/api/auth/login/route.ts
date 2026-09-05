@@ -27,9 +27,10 @@ export async function POST(request: NextRequest) {
     name: user.name,
     role: user.role,
     clinicId: user.clinic_id,
+    groupId: user.group_id,
   });
 
-  const response = NextResponse.json({ ok: true, role: user.role });
+  const response = NextResponse.json({ ok: true, role: user.role, groupId: user.group_id, clinicId: user.clinic_id });
   response.cookies.set(sessionCookieName, token, {
     httpOnly: true,
     sameSite: "lax",

@@ -8,10 +8,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const { slug } = await params;
     const clinic = await getClinicBySlug(slug);
     if (!clinic) return { title: "Clinic" };
-    const area = clinic.locations[0]?.area ?? "Hyderabad";
+    const area = clinic.short_address ?? clinic.locations[0]?.area ?? "Hyderabad";
+    const name = clinic.group?.name ?? clinic.name;
     return {
-      title: `${clinic.name} | Dentist in ${area}`,
-      description: clinic.tagline ?? `Book a dental appointment at ${clinic.name}.`,
+      title: `${name} | Dentist in ${area}`,
+      description: clinic.group?.description ?? clinic.tagline ?? `Book a dental appointment at ${name}.`,
       icons: clinic.logo_url ? { icon: clinic.logo_url } : { icon: "/brand/favicon.png" },
     };
   } catch {
